@@ -9,5 +9,5 @@ import java.util.UUID;
 
 public interface SellerRepository extends JpaRepository<Seller, UUID> {
     // figured it's better to use this
-    Page<Seller> findAll(String name, Pageable pageable);
+    Page<Seller> findByGameAndApprovedTrue(String game, Pageable pageable);
 }
