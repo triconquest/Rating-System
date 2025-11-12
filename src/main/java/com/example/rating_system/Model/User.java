@@ -15,15 +15,17 @@ public class User {
     private String passwordHash;
     private LocalDateTime createdAt;
     @Enumerated (EnumType.STRING) private Role role;
-    //private boolean enabled;
+    private boolean approved = false;
     private boolean emailConfirmed = false;
 
 
+    public UUID getId() { return id; }
     public String getFirstName() { return firstName; }
     public String getLastName() { return lastName; }
     public String getEmail() { return email; }
     public Role getRole() { return role; }
     public boolean isEmailConfirmed() { return emailConfirmed; }
+    public boolean isApproved() { return approved; }
 
     public void setFirstName(String firstName) {
         this.firstName = firstName;
@@ -37,5 +39,7 @@ public class User {
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
     }
+    public void setApproved(boolean approved) { this.approved = approved; }
     public void setEmailConfirmed(boolean emailConfirmed) { this.emailConfirmed = emailConfirmed; }
+    public void setRole(Role role) { this.role = role; }
 }

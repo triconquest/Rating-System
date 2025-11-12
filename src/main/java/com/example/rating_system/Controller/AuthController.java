@@ -2,6 +2,7 @@ package com.example.rating_system.Controller;
 
 
 import com.example.rating_system.DTO.UserRegistrationDto;
+import com.example.rating_system.Model.Role;
 import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.UserRepository;
 import com.example.rating_system.Services.RedisService;
@@ -29,6 +30,7 @@ public class AuthController {
         user.setEmail(dto.getEmail());
         user.setPasswordHash(dto.getPassword());
         user.setEmailConfirmed(false);
+        user.setRole(Role.PENDING_SELLER);
         userRepository.save(user);
 
         String code = UUID.randomUUID().toString();
