@@ -3,10 +3,13 @@ package com.example.rating_system.Controller;
 import com.example.rating_system.DTO.CommentDto;
 import com.example.rating_system.Model.Comment;
 import com.example.rating_system.Model.CommentStatus;
+import com.example.rating_system.Model.Role;
 import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.CommentRepository;
 import com.example.rating_system.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -48,12 +51,20 @@ public class CommentController {
 
     // admin approves/declines a comment
     @PutMapping("/{commentId}/status")
-    public Comment moderateComment(@PathVariable UUID commentId, @RequestParam CommentStatus status)
+    public ResponseEntity<?> moderateComment(@PathVariable UUID commentId, @RequestParam CommentStatus status, @RequestParam UUID userId)
     {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found!"));
+
+        if(user.getRole() != Role.ADMIN)
+        {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only admins can approve or decline comments");
+        }
+
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RuntimeException("Comment not found"));
 
         comment.setStatus(status);
-        return commentRepository.save(comment);
+        commentRepository.save(comment);
+        return ResponseEntity.ok(comment);
     }
 
     @GetMapping
