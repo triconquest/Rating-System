@@ -12,4 +12,5 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     // found a better way, prevents nullptr exception
     Optional<User> findByEmail(String email);
     List<User> findByApprovedFalseAndRole(Role role);
+    List<User> findByApprovedTrueAndRole(Role role);
 }

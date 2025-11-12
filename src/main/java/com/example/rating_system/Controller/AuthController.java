@@ -1,16 +1,18 @@
 package com.example.rating_system.Controller;
 
-
-import com.example.rating_system.DTO.UserRegistrationDto;
+import com.example.rating_system.DTO.LoginDto;
 import com.example.rating_system.Model.Role;
 import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.UserRepository;
-import com.example.rating_system.Services.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
-import java.util.UUID;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/auth")
@@ -20,44 +22,29 @@ public class AuthController {
     private UserRepository userRepository;
 
     @Autowired
-    private RedisService redisService;
+    private PasswordEncoder passwordEncoder;
 
-    @PostMapping("/register")
-    public String register(@RequestBody UserRegistrationDto dto) {
-        User user = new User();
-        user.setFirstName(dto.getFirstName());
-        user.setLastName(dto.getLastName());
-        user.setEmail(dto.getEmail());
-        user.setPasswordHash(dto.getPassword());
-        user.setEmailConfirmed(false);
-        user.setRole(Role.PENDING_SELLER);
-        userRepository.save(user);
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody LoginDto dto) {
+        User user = userRepository.findByEmail(dto.getEmail())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
 
-        String code = UUID.randomUUID().toString();
-        redisService.saveCode(user.getEmail(), code);
+        if(!user.isEmailConfirmed()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Email not confirmed, check your confirmation link");
+        }
 
-        System.out.println("Confirmation link: http://localhost:8080/auth/confirm?email=" + user.getEmail() + "&code=" + code);
-        return "Registration successful, check your email to confirm";
-    }
+        if(!passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Incorrect email or password");
+        }
 
-    @GetMapping("/confirm")
-    public String confirmEmail(@RequestParam String email, @RequestParam String code) {
-        String storedCode = redisService.getCode(email);
+        if(user.getRole() == Role.ROLE_PENDING_SELLER && !user.isApproved())
+        {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("This seller profile is pending admin approval");
+        }
 
-        if(storedCode == null)
-            return "Confirmation code expired or invalid";
-
-        if(!storedCode.equals(code))
-            return "Invalid confirmation code";
-
-        Optional<User> user = userRepository.findByEmail(email);
-        if(user.isEmpty())
-            return "User not found";
-
-        user.get().setEmailConfirmed(true);
-        userRepository.save(user.get());
-
-        redisService.deleteCode(email);
-        return "Email confirmed successfully";
+        return ResponseEntity.ok("Login successful - welcome, " + user.getFirstName());
     }
 }

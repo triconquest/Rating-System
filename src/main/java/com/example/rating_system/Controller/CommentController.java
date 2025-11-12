@@ -10,7 +10,9 @@ import com.example.rating_system.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -45,21 +47,16 @@ public class CommentController {
 
     // admin gets pending comments
     @GetMapping("/pending")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<Comment> getPendingComments() {
         return commentRepository.findAllByStatus(CommentStatus.PENDING);
     }
 
     // admin approves/declines a comment
     @PutMapping("/{commentId}/status")
-    public ResponseEntity<?> moderateComment(@PathVariable UUID commentId, @RequestParam CommentStatus status, @RequestParam UUID userId)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> moderateComment(@PathVariable UUID commentId, @RequestParam CommentStatus status)
     {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found!"));
-
-        if(user.getRole() != Role.ADMIN)
-        {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only admins can approve or decline comments");
-        }
-
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RuntimeException("Comment not found"));
 
         comment.setStatus(status);
@@ -67,6 +64,13 @@ public class CommentController {
         return ResponseEntity.ok(comment);
     }
 
+    // get a specific comment
+    @GetMapping("/{commentId}")
+    public Comment getSpecificComment(@PathVariable UUID commentId) {
+        return commentRepository.findById(commentId).orElseThrow(() -> new RuntimeException("Comment not found"));
+    }
+
+    // get every comment linked to this seller
     @GetMapping
     public List<Comment> getApprovedComments(@PathVariable UUID sellerId) {
         return commentRepository.findAllBySellerIdAndStatus(sellerId, CommentStatus.APPROVED);

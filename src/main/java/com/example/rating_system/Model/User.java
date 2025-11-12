@@ -13,7 +13,7 @@ public class User {
     private String lastName;
     @Column (unique = true) private String email;
     private String passwordHash;
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
     @Enumerated (EnumType.STRING) private Role role;
     private boolean approved = false;
     private boolean emailConfirmed = false;
@@ -23,6 +23,7 @@ public class User {
     public String getFirstName() { return firstName; }
     public String getLastName() { return lastName; }
     public String getEmail() { return email; }
+    public String getPasswordHash() { return passwordHash; }
     public Role getRole() { return role; }
     public boolean isEmailConfirmed() { return emailConfirmed; }
     public boolean isApproved() { return approved; }
