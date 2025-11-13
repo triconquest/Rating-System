@@ -47,8 +47,9 @@ public class SecurityConfig {
                 .roles("ADMIN")
                 .build();
 
-        UserDetails seller = User.withUsername("seller")
-                .password("{noop}password")
+        UserDetails seller = User.builder()
+                .username("seller")
+                .password(passwordEncoder().encode("seller"))
                 .roles("SELLER")
                 .build();
 
