@@ -9,5 +9,4 @@ public class RatingSystemApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(RatingSystemApplication.class, args);
 	}
-
 }

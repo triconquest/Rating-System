@@ -21,11 +21,15 @@ import java.util.UUID;
 @RequestMapping("/users/{sellerId}/comments")
 public class CommentController {
 
-    @Autowired
-    private CommentRepository commentRepository;
+    private final CommentRepository commentRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    public CommentController(CommentRepository commentRepository,
+                             UserRepository userRepository)
+    {
+        this.commentRepository = commentRepository;
+        this.userRepository = userRepository;
+    }
 
     @PostMapping
     public Comment addComment(@PathVariable UUID sellerId, @RequestBody CommentDto dto) {
@@ -39,6 +43,12 @@ public class CommentController {
         {
             User author = userRepository.findById(dto.getAuthorId()).orElseThrow(() -> new RuntimeException("Author not found"));
             comment.setAuthor(author);
+            comment.setAnonymousToken(null);
+        }
+        else {
+            String token = UUID.randomUUID().toString();
+            comment.setAnonymousToken(token);
+            comment.setAuthor(null);
         }
 
         comment.setStatus(CommentStatus.PENDING);
@@ -70,10 +80,63 @@ public class CommentController {
         return commentRepository.findById(commentId).orElseThrow(() -> new RuntimeException("Comment not found"));
     }
 
+    // update a specific comment
+    @PutMapping("/{commentId}")
+    public ResponseEntity<?> updateComment(@PathVariable UUID commentId,
+                                           @RequestBody CommentDto dto,
+                                           @RequestParam(required = false) UUID authorId,
+                                           @RequestParam(required = false) String anonymousToken)
+    {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RuntimeException("Comment not found."));
+
+        // registered user updates a comment
+        if(comment.getAuthor() != null) {
+            if(!comment.getAuthor().getId().equals(authorId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only update your own comments.");
+            }
+        }
+
+        // anonymous user updates a comment
+        else if(comment.getAnonymousToken() != null) {
+            if(!comment.getAnonymousToken().equals(anonymousToken)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid anonymous token. You can only update your own comments");
+            }
+        }
+
+        comment.setMessage(dto.getMessage());
+        comment.setStatus(CommentStatus.PENDING); // updated comment needs to be re-approved
+
+        commentRepository.save(comment);
+        return ResponseEntity.ok(comment);
+    }
+
     // get every comment linked to this seller
     @GetMapping
     public List<Comment> getApprovedComments(@PathVariable UUID sellerId) {
         return commentRepository.findAllBySellerIdAndStatus(sellerId, CommentStatus.APPROVED);
     }
 
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<String> deleteComment(@PathVariable UUID commentId,
+                                @RequestParam(required = false) UUID authorId,
+                                @RequestParam(required = false) String token) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        // registered user
+        if(comment.getAuthor() != null)
+        {
+            if(!comment.getAuthor().getId().equals(authorId))
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only delete your own comments.");
+        }
+
+        // anonymous user
+        else if(comment.getAnonymousToken() != null)
+        {
+            if(!comment.getAnonymousToken().equals(token))
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid anonymous token, you can only delete your own comments.");
+        }
+
+        commentRepository.delete(comment);
+        return ResponseEntity.ok("Comment deleted successfully.");
+    }
 }

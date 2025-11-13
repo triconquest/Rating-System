@@ -16,8 +16,11 @@ import java.util.UUID;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminSellerController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+
+    public AdminSellerController(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @GetMapping
     public List<User> getAllSellers() {

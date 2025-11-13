@@ -7,6 +7,8 @@ import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.UserRepository;
 import com.example.rating_system.Services.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,17 +19,25 @@ import java.util.UUID;
 @RequestMapping("/auth")
 public class RegistrationController {
 
-    @Autowired
     private UserRepository userRepository;
-
-    @Autowired
     private RedisService redisService;
-
-    @Autowired
     private PasswordEncoder passwordEncoder;
 
+    public RegistrationController(UserRepository userRepository,
+                                  RedisService redisService,
+                                  PasswordEncoder passwordEncoder)
+    {
+        this.userRepository = userRepository;
+        this.redisService = redisService;
+        this.passwordEncoder = passwordEncoder;
+    }
+
     @PostMapping("/register")
-    public String register(@RequestBody UserRegistrationDto dto) {
+    public ResponseEntity<String> register(@RequestBody UserRegistrationDto dto) {
+        if(userRepository.findByEmail(dto.getEmail()).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("This email is taken");
+        }
+
         User user = new User();
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
@@ -44,7 +54,7 @@ public class RegistrationController {
         redisService.saveCode(user.getEmail(), code);
 
         System.out.println("Confirmation link: http://localhost:8080/auth/confirm?email=" + user.getEmail() + "&code=" + code);
-        return "Registration successful, check your email to confirm";
+        return ResponseEntity.ok("Registration successful, check your email to confirm");
     }
 
     @GetMapping("/confirm")
