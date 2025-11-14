@@ -12,4 +12,5 @@ import java.util.UUID;
 @Repository
 public interface GameObjectRepository extends JpaRepository<GameObject, UUID> {
     Optional<GameObject> findByTitle(String title);
+    List<GameObject> findAllByTitle(String title);
 }

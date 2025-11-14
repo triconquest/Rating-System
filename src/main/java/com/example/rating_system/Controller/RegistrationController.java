@@ -7,6 +7,7 @@ import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.UserRepository;
 import com.example.rating_system.Services.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,9 +20,9 @@ import java.util.UUID;
 @RequestMapping("/auth")
 public class RegistrationController {
 
-    private UserRepository userRepository;
-    private RedisService redisService;
-    private PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final RedisService redisService;
+    private final PasswordEncoder passwordEncoder;
 
     public RegistrationController(UserRepository userRepository,
                                   RedisService redisService,

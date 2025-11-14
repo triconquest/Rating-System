@@ -3,11 +3,9 @@ package com.example.rating_system.Controller;
 import com.example.rating_system.DTO.CommentDto;
 import com.example.rating_system.Model.Comment;
 import com.example.rating_system.Model.CommentStatus;
-import com.example.rating_system.Model.Role;
 import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.CommentRepository;
 import com.example.rating_system.Repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,8 +33,13 @@ public class CommentController {
     public Comment addComment(@PathVariable UUID sellerId, @RequestBody CommentDto dto) {
         User seller = userRepository.findById(sellerId).orElseThrow(() -> new RuntimeException("Seller not found"));
 
+        if(dto.getRating() == null || dto.getRating() < 1 || dto.getRating() > 5) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rating must be between 1 and 5");
+        }
+
         Comment comment = new Comment();
         comment.setMessage(dto.getMessage());
+        comment.setRating(dto.getRating());
         comment.setSeller(seller);
 
         if(dto.getAuthorId() != null)

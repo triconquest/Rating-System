@@ -4,8 +4,6 @@ import com.example.rating_system.DTO.LoginDto;
 import com.example.rating_system.Model.Role;
 import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
