@@ -1,10 +1,19 @@
 package com.example.rating_system.DTO;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.util.UUID;
 
 public class GameObjectDto {
+
+    @NotBlank(message = "Game title can't be blank")
     private String title;
+
+    @NotBlank(message = "Text can't be blank")
     private String text;
+
+    @NotNull(message = "sellerId can't be null")
     private UUID sellerId;
 
     public String getTitle() { return title; }

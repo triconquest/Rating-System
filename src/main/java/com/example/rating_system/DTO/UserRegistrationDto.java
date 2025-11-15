@@ -1,9 +1,24 @@
 package com.example.rating_system.DTO;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class UserRegistrationDto {
+
+    @NotBlank(message = "First name is required")
+    @Size(min = 3, max = 20, message = "First name must be 3-20 characters long")
     private String firstName;
-    private String lastName;
-    private String email;
+
+    @NotBlank(message = "Last name is required")
+    @Size(min = 3, max = 20, message = "Last name must be 3-20 characters long")
+    String lastName;
+
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email format is invalid")
+    String email;
+
+    @NotBlank(message = "Password is required")
     private String password;
 
     public String getFirstName() { return firstName; }

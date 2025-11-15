@@ -5,6 +5,7 @@ import com.example.rating_system.Model.Comment;
 import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.CommentRepository;
 import com.example.rating_system.Repository.UserRepository;
+import com.example.rating_system.Services.CommentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -17,6 +18,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+
+// TODO: UPDATE TESTS!!! THESE DONT WORK FOR THE CURRENT VERSION!
 public class CommentControllerTest {
 
     @Mock
@@ -25,13 +28,16 @@ public class CommentControllerTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private CommentService commentService;
+
     private CommentController commentController;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         // constructor injection
-        commentController = new CommentController(commentRepository, userRepository);
+        commentController = new CommentController(commentService);
     }
 
     @Test

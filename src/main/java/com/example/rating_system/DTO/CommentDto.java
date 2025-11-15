@@ -1,10 +1,18 @@
 package com.example.rating_system.DTO;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.util.UUID;
 
 public class CommentDto {
+
+    @NotBlank(message = "Message can't be blank")
     private String message;
+
     private UUID authorId;
+
+    @NotNull(message = "Rating can't be null")
     private Integer rating;
 
     public String getMessage() { return message; }

@@ -1,14 +1,11 @@
 package com.example.rating_system.Controller;
 
-import com.example.rating_system.Model.Role;
 import com.example.rating_system.Model.User;
-import com.example.rating_system.Repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.rating_system.Services.AdminSellerService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -16,41 +13,29 @@ import java.util.UUID;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminSellerController {
 
-    private final UserRepository userRepository;
+    private final AdminSellerService adminSellerService;
 
-    public AdminSellerController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public AdminSellerController(AdminSellerService adminSellerService) {
+        this.adminSellerService = adminSellerService;
     }
 
     @GetMapping
     public List<User> getAllSellers() {
-        return userRepository.findByApprovedTrueAndRole(Role.ROLE_SELLER);
+        return adminSellerService.getAllSellers();
     }
 
     @GetMapping("/pending")
     public List<User> getPendingSellers() {
-        return userRepository.findByApprovedFalseAndRole(Role.ROLE_PENDING_SELLER);
+        return adminSellerService.getPendingSellers();
     }
 
     @PutMapping("{id}/approve")
     public String approveSeller(@PathVariable UUID id) {
-        Optional<User> seller = userRepository.findById(id);
-        if(seller.isEmpty())
-            return "Couldn't find seller";
-
-        seller.get().setApproved(true);
-        seller.get().setRole(Role.ROLE_SELLER);
-        userRepository.save(seller.get());
-        return "Seller approved";
+        return adminSellerService.approveSeller(id);
     }
 
     @PutMapping("{id}/decline")
     public String declineSeller(@PathVariable UUID id) {
-        Optional<User> seller = userRepository.findById(id);
-        if(seller.isEmpty())
-            return "Couldn't find seller";
-
-        userRepository.delete(seller.get());
-        return "Seller declined and removed";
+        return adminSellerService.declineSeller(id);
     }
 }

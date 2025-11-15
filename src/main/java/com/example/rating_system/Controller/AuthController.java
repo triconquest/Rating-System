@@ -4,6 +4,8 @@ import com.example.rating_system.DTO.LoginDto;
 import com.example.rating_system.Model.Role;
 import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.UserRepository;
+import com.example.rating_system.Services.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,36 +19,14 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final AuthService authService;
 
-    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder)
-    {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginDto dto) {
-        User user = userRepository.findByEmail(dto.getEmail())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
-
-        if(!user.isEmailConfirmed()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Email not confirmed, check your confirmation link");
-        }
-
-        if(!passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Incorrect email or password");
-        }
-
-        if(user.getRole() == Role.ROLE_PENDING_SELLER && !user.isApproved())
-        {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("This seller profile is pending admin approval");
-        }
-
-        return ResponseEntity.ok("Login successful - welcome, " + user.getFirstName());
+    public ResponseEntity<String> login(@Valid @RequestBody LoginDto dto) {
+        return authService.login(dto);
     }
 }

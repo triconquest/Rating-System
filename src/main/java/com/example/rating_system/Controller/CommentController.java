@@ -6,6 +6,8 @@ import com.example.rating_system.Model.CommentStatus;
 import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.CommentRepository;
 import com.example.rating_system.Repository.UserRepository;
+import com.example.rating_system.Services.CommentService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,50 +21,23 @@ import java.util.UUID;
 @RequestMapping("/users/{sellerId}/comments")
 public class CommentController {
 
-    private final CommentRepository commentRepository;
-    private final UserRepository userRepository;
+    private final CommentService commentService;
 
-    public CommentController(CommentRepository commentRepository,
-                             UserRepository userRepository)
+    public CommentController(CommentService commentService)
     {
-        this.commentRepository = commentRepository;
-        this.userRepository = userRepository;
+        this.commentService = commentService;
     }
 
     @PostMapping
-    public Comment addComment(@PathVariable UUID sellerId, @RequestBody CommentDto dto) {
-        User seller = userRepository.findById(sellerId).orElseThrow(() -> new RuntimeException("Seller not found"));
-
-        if(dto.getRating() == null || dto.getRating() < 1 || dto.getRating() > 5) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rating must be between 1 and 5");
-        }
-
-        Comment comment = new Comment();
-        comment.setMessage(dto.getMessage());
-        comment.setRating(dto.getRating());
-        comment.setSeller(seller);
-
-        if(dto.getAuthorId() != null)
-        {
-            User author = userRepository.findById(dto.getAuthorId()).orElseThrow(() -> new RuntimeException("Author not found"));
-            comment.setAuthor(author);
-            comment.setAnonymousToken(null);
-        }
-        else {
-            String token = UUID.randomUUID().toString();
-            comment.setAnonymousToken(token);
-            comment.setAuthor(null);
-        }
-
-        comment.setStatus(CommentStatus.PENDING);
-        return commentRepository.save(comment);
+    public Comment addComment(@PathVariable UUID sellerId, @Valid @RequestBody CommentDto dto) {
+        return commentService.addComment(sellerId, dto);
     }
 
     // admin gets pending comments
     @GetMapping("/pending")
     @PreAuthorize("hasRole('ADMIN')")
     public List<Comment> getPendingComments() {
-        return commentRepository.findAllByStatus(CommentStatus.PENDING);
+        return commentService.getPendingComments();
     }
 
     // admin approves/declines a comment
@@ -70,76 +45,35 @@ public class CommentController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> moderateComment(@PathVariable UUID commentId, @RequestParam CommentStatus status)
     {
-        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RuntimeException("Comment not found"));
-
-        comment.setStatus(status);
-        commentRepository.save(comment);
-        return ResponseEntity.ok(comment);
+        return commentService.moderateComment(commentId, status);
     }
 
     // get a specific comment
     @GetMapping("/{commentId}")
     public Comment getSpecificComment(@PathVariable UUID commentId) {
-        return commentRepository.findById(commentId).orElseThrow(() -> new RuntimeException("Comment not found"));
+        return commentService.getSpecificComment(commentId);
     }
 
     // update a specific comment
     @PutMapping("/{commentId}")
     public ResponseEntity<?> updateComment(@PathVariable UUID commentId,
-                                           @RequestBody CommentDto dto,
+                                           @Valid @RequestBody CommentDto dto,
                                            @RequestParam(required = false) UUID authorId,
                                            @RequestParam(required = false) String anonymousToken)
     {
-        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RuntimeException("Comment not found."));
-
-        // registered user updates a comment
-        if(comment.getAuthor() != null) {
-            if(!comment.getAuthor().getId().equals(authorId)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only update your own comments.");
-            }
-        }
-
-        // anonymous user updates a comment
-        else if(comment.getAnonymousToken() != null) {
-            if(!comment.getAnonymousToken().equals(anonymousToken)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid anonymous token. You can only update your own comments");
-            }
-        }
-
-        comment.setMessage(dto.getMessage());
-        comment.setStatus(CommentStatus.PENDING); // updated comment needs to be re-approved
-
-        commentRepository.save(comment);
-        return ResponseEntity.ok(comment);
+        return commentService.updateComment(commentId, dto, authorId, anonymousToken);
     }
 
     // get every comment linked to this seller
     @GetMapping
     public List<Comment> getApprovedComments(@PathVariable UUID sellerId) {
-        return commentRepository.findAllBySellerIdAndStatus(sellerId, CommentStatus.APPROVED);
+        return commentService.getApprovedComments(sellerId);
     }
 
     @DeleteMapping("/{commentId}")
     public ResponseEntity<String> deleteComment(@PathVariable UUID commentId,
                                 @RequestParam(required = false) UUID authorId,
                                 @RequestParam(required = false) String token) {
-        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RuntimeException("Comment not found"));
-
-        // registered user
-        if(comment.getAuthor() != null)
-        {
-            if(!comment.getAuthor().getId().equals(authorId))
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only delete your own comments.");
-        }
-
-        // anonymous user
-        else if(comment.getAnonymousToken() != null)
-        {
-            if(!comment.getAnonymousToken().equals(token))
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid anonymous token, you can only delete your own comments.");
-        }
-
-        commentRepository.delete(comment);
-        return ResponseEntity.ok("Comment deleted successfully.");
+        return commentService.deleteComment(commentId, authorId, token);
     }
 }

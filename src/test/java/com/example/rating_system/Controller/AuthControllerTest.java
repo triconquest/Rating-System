@@ -4,6 +4,7 @@ import com.example.rating_system.DTO.LoginDto;
 import com.example.rating_system.Model.Role;
 import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.UserRepository;
+import com.example.rating_system.Services.AuthService;
 import org.apache.coyote.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,12 +29,15 @@ public class AuthControllerTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private AuthService authService;
+
     private AuthController authController;
 
     @BeforeEach
     void setup() {
         MockitoAnnotations.openMocks(this);
-        authController = new AuthController(userRepository, passwordEncoder);
+        authController = new AuthController(authService);
     }
 
     @Test
