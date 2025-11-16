@@ -57,7 +57,8 @@ public class CommentIntegrationTest {
     void testAddComment() throws Exception {
         String commentJson = """
                 {
-                    "message": "test comment"
+                    "message": "test comment",
+                    "rating": 4
                 }
                 """;
 

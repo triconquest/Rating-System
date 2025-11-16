@@ -2,6 +2,7 @@ package com.example.rating_system.Controller;
 
 import com.example.rating_system.DTO.CommentDto;
 import com.example.rating_system.Model.Comment;
+import com.example.rating_system.Model.Role;
 import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.CommentRepository;
 import com.example.rating_system.Repository.UserRepository;
@@ -19,7 +20,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 
-// TODO: UPDATE TESTS!!! THESE DONT WORK FOR THE CURRENT VERSION!
 public class CommentControllerTest {
 
     @Mock
@@ -28,16 +28,13 @@ public class CommentControllerTest {
     @Mock
     private UserRepository userRepository;
 
-    @Mock
     private CommentService commentService;
-
-    private CommentController commentController;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         // constructor injection
-        commentController = new CommentController(commentService);
+        commentService = new CommentService(commentRepository, userRepository);
     }
 
     @Test
@@ -46,10 +43,14 @@ public class CommentControllerTest {
         UUID authorId = UUID.randomUUID();
 
         User seller = new User();
+        seller.setRole(Role.ROLE_SELLER);
+        seller.setApproved(true);
+
         User author = new User();
 
         CommentDto dto = new CommentDto();
         dto.setMessage("test message");
+        dto.setRating(4);
         dto.setAuthorId(authorId);
 
         when(userRepository.findById(sellerId)).thenReturn(Optional.of(seller));
@@ -58,7 +59,7 @@ public class CommentControllerTest {
         Comment savedComment = new Comment();
         when(commentRepository.save(any(Comment.class))).thenReturn(savedComment);
 
-        Comment result = commentController.addComment(sellerId, dto);
+        Comment result = commentService.addComment(sellerId, dto);
 
         assertNotNull(result);
         verify(commentRepository, times(1)).save(any(Comment.class));
@@ -72,7 +73,7 @@ public class CommentControllerTest {
         when(userRepository.findById(sellerId)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            commentController.addComment(sellerId, dto);
+            commentService.addComment(sellerId, dto);
         });
 
         assertEquals("Seller not found", exception.getMessage());

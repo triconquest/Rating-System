@@ -29,15 +29,12 @@ public class AuthControllerTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    @Mock
     private AuthService authService;
-
-    private AuthController authController;
 
     @BeforeEach
     void setup() {
         MockitoAnnotations.openMocks(this);
-        authController = new AuthController(authService);
+        authService = new AuthService(userRepository, passwordEncoder);
     }
 
     @Test
@@ -58,7 +55,7 @@ public class AuthControllerTest {
         when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())).thenReturn(true);
 
-        ResponseEntity<String> response = authController.login(dto);
+        ResponseEntity<String> response = authService.login(dto);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(response.getBody().contains("Login successful"));
@@ -83,7 +80,7 @@ public class AuthControllerTest {
         when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
-        ResponseEntity<String> response = authController.login(dto);
+        ResponseEntity<String> response = authService.login(dto);
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
         assertEquals("Incorrect email or password", response.getBody());
     }
