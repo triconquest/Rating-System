@@ -7,6 +7,8 @@ import com.example.rating_system.Model.Role;
 import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.CommentRepository;
 import com.example.rating_system.Repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -29,7 +33,7 @@ public class CommentService {
         this.userRepository = userRepository;
     }
 
-    public Comment addComment(UUID sellerId, CommentDto dto) {
+    public ResponseEntity<?> addComment(UUID sellerId, CommentDto dto, HttpServletRequest request) {
         User seller = userRepository.findById(sellerId).orElseThrow(() -> new RuntimeException("Seller not found"));
 
         if(!seller.isApproved() || seller.getRole() != Role.ROLE_SELLER) {
@@ -45,20 +49,34 @@ public class CommentService {
         comment.setRating(dto.getRating());
         comment.setSeller(seller);
 
-        if(dto.getAuthorId() != null)
-        {
-            User author = userRepository.findById(dto.getAuthorId()).orElseThrow(() -> new RuntimeException("Author not found"));
-            comment.setAuthor(author);
-            comment.setAnonymousToken(null);
+        HttpSession session = request.getSession(false);
+
+        if(session != null) {
+            UUID userId = (UUID) session.getAttribute("sellerId");
+            if(userId != null) {
+                User author = userRepository.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+                comment.setAuthor(author);
+                comment.setAnonymousToken(null);
+            }
         }
-        else {
+
+        if(comment.getAuthor() == null) {
             String token = UUID.randomUUID().toString();
             comment.setAnonymousToken(token);
             comment.setAuthor(null);
         }
 
         comment.setStatus(CommentStatus.PENDING);
-        return commentRepository.save(comment);
+        Comment saved = commentRepository.save(comment);
+
+        if(saved.getAuthor() == null && saved.getAnonymousToken() != null) {
+            return ResponseEntity.ok(Map.of(
+                    "commentId", saved.getId(),
+                    "anonymousToken", saved.getAnonymousToken()
+            ));
+        }
+
+        return ResponseEntity.ok(Map.of("commentId", saved.getId()));
     }
 
     public List<Comment> getPendingComments() {
@@ -82,23 +100,29 @@ public class CommentService {
     // update specific comment
     public ResponseEntity<?> updateComment(UUID commentId,
                                            CommentDto dto,
-                                           UUID authorId,
+                                           HttpServletRequest request,
                                            String token)
     {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RuntimeException("Comment not found."));
 
-        // registered user updates a comment
-        if(comment.getAuthor() != null) {
-            if(!comment.getAuthor().getId().equals(authorId)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only update your own comments.");
-            }
-        }
+        HttpSession session = request.getSession(false);
 
-        // anonymous user updates a comment
+        UUID authorId = (UUID) session.getAttribute("sellerId");
+
+        // registered user must have a session
+        if(comment.getAuthor() != null) {
+            UUID userId = (UUID) session.getAttribute("userId");
+            if(!comment.getAuthor().getId().equals(userId)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only update your own comments");
+            }
+        } // anonymous user doesn't have a session
         else if(comment.getAnonymousToken() != null) {
             if(!comment.getAnonymousToken().equals(token)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid anonymous token. You can only update your own comments");
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid anonymous token");
             }
+        }
+        else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Comment has no author or anonymous token");
         }
 
         comment.setMessage(dto.getMessage());
@@ -110,14 +134,21 @@ public class CommentService {
     }
 
     // get every comment linked to this user
-    public List<Comment> getApprovedComments(UUID sellerId) {
-        return commentRepository.findAllBySellerIdAndStatus(sellerId, CommentStatus.APPROVED);
+    public List<CommentDto> getApprovedComments(UUID sellerId) {
+        return commentRepository.findAllBySellerIdAndStatus(sellerId, CommentStatus.APPROVED)
+                .stream()
+                .map(CommentDto::toDto)
+                .collect(Collectors.toList());
     }
 
     public ResponseEntity<String> deleteComment(UUID commentId,
-                                                UUID authorId,
+                                                HttpServletRequest request,
                                                 String token) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        HttpSession session = request.getSession(false);
+
+        UUID authorId = (UUID) session.getAttribute("sellerId");
 
         // registered user
         if(comment.getAuthor() != null)

@@ -10,12 +10,6 @@ public class SellerRatingDto {
     private double averageRating;
     private int totalRatings;
 
-    private int stars1;
-    private int stars2;
-    private int stars3;
-    private int stars4;
-    private int stars5;
-
     private int rank;
 
     private String game;

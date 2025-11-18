@@ -4,12 +4,13 @@ import com.example.rating_system.DTO.LoginDto;
 import com.example.rating_system.Model.Role;
 import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -25,7 +26,7 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public ResponseEntity<String> login(LoginDto dto) {
+    public ResponseEntity<String> login(LoginDto dto, HttpServletRequest request) {
         User user = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
 
@@ -45,6 +46,18 @@ public class AuthService {
                     .body("This seller profile is pending admin approval");
         }
 
+        HttpSession session = request.getSession(true);
+
+        session.setAttribute("sellerId", user.getId());
+
         return ResponseEntity.ok("Login successful - welcome, " + user.getFirstName());
+    }
+
+    public ResponseEntity<String> logout(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if(session != null)
+            session.invalidate();
+
+        return ResponseEntity.ok("Logged out");
     }
 }

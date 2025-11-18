@@ -49,12 +49,6 @@ public class SecurityConfig {
                 .roles("ADMIN")
                 .build();
 
-        UserDetails seller = User.builder()
-                .username("seller")
-                .password(passwordEncoder().encode("seller"))
-                .roles("SELLER")
-                .build();
-
-        return new InMemoryUserDetailsManager(admin, seller);
+        return new InMemoryUserDetailsManager(admin);
     }
 }

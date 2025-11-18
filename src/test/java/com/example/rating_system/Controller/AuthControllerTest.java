@@ -5,6 +5,7 @@ import com.example.rating_system.Model.Role;
 import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.UserRepository;
 import com.example.rating_system.Services.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.coyote.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,9 @@ public class AuthControllerTest {
 
     private AuthService authService;
 
+    @Mock
+    private HttpServletRequest request;
+
     @BeforeEach
     void setup() {
         MockitoAnnotations.openMocks(this);
@@ -55,7 +59,7 @@ public class AuthControllerTest {
         when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())).thenReturn(true);
 
-        ResponseEntity<String> response = authService.login(dto);
+        ResponseEntity<String> response = authService.login(dto, request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(response.getBody().contains("Login successful"));
@@ -80,7 +84,7 @@ public class AuthControllerTest {
         when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
-        ResponseEntity<String> response = authService.login(dto);
+        ResponseEntity<String> response = authService.login(dto, request);
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
         assertEquals("Incorrect email or password", response.getBody());
     }

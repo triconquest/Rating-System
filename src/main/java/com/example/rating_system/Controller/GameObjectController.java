@@ -3,6 +3,7 @@ package com.example.rating_system.Controller;
 import com.example.rating_system.DTO.GameObjectDto;
 import com.example.rating_system.Model.GameObject;
 import com.example.rating_system.Services.GameObjectService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,9 +25,8 @@ public class GameObjectController {
 
     // add a new game object
     @PostMapping
-    @PreAuthorize("hasRole('SELLER')")
-    public ResponseEntity<String> addGameObject(@Valid @RequestBody GameObjectDto dto) {
-        return gameObjectService.addGameObject(dto);
+    public ResponseEntity<String> addGameObject(@Valid @RequestBody GameObjectDto dto, HttpServletRequest request) {
+        return gameObjectService.addGameObject(dto, request);
     }
 
     // retrieve game objects
@@ -37,14 +37,12 @@ public class GameObjectController {
 
     // edit an object
     @PutMapping("/{objectId}")
-    @PreAuthorize("hasRole('SELLER')")
-    public ResponseEntity<String> editGameObject(@PathVariable UUID objectId, @Valid @RequestBody GameObjectDto dto) {
-        return gameObjectService.editGameObject(objectId, dto);
+    public ResponseEntity<String> editGameObject(@PathVariable UUID objectId, @Valid @RequestBody GameObjectDto dto, HttpServletRequest request) {
+        return gameObjectService.editGameObject(objectId, dto, request);
     }
 
     @DeleteMapping("/{objectId}")
-    @PreAuthorize("hasRole('SELLER')")
-    public ResponseEntity<String> deleteGameObject(@PathVariable UUID objectId, @RequestParam UUID sellerId) {
-        return gameObjectService.deleteGameObject(objectId, sellerId);
+    public ResponseEntity<String> deleteGameObject(@PathVariable UUID objectId, HttpServletRequest request) {
+        return gameObjectService.deleteGameObject(objectId, request);
     }
 }

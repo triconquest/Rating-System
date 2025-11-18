@@ -12,11 +12,11 @@ import java.util.UUID;
 
 @Service
 @Transactional
-public class AdminSellerService {
+public class AdminService {
 
     private final UserRepository userRepository;
 
-    public AdminSellerService(UserRepository userRepository) {
+    public AdminService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
@@ -32,6 +32,9 @@ public class AdminSellerService {
         Optional<User> seller = userRepository.findById(id);
         if(seller.isEmpty())
             return "Couldn't find seller";
+
+        if(!seller.get().isEmailConfirmed())
+            return "Seller needs to confirm their email";
 
         seller.get().setApproved(true);
         seller.get().setRole(Role.ROLE_SELLER);

@@ -1,9 +1,6 @@
 package com.example.rating_system.Controller;
 
 import com.example.rating_system.DTO.SellerRatingDto;
-import com.example.rating_system.Model.Comment;
-import com.example.rating_system.Repository.CommentRepository;
-import com.example.rating_system.Repository.UserRepository;
 import com.example.rating_system.Services.RatingService;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,7 +11,7 @@ import java.util.UUID;
 @RequestMapping("/ratings")
 public class RatingController {
 
-    private RatingService ratingService;
+    private final RatingService ratingService;
 
     public RatingController(RatingService ratingService) {
         this.ratingService = ratingService;
@@ -38,7 +35,4 @@ public class RatingController {
     ) {
         return ratingService.filterSellers(game, min, max);
     }
-
-
-
 }

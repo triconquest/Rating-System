@@ -6,6 +6,8 @@ import com.example.rating_system.Model.Role;
 import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.GameObjectRepository;
 import com.example.rating_system.Repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,8 +32,16 @@ public class GameObjectService {
     }
 
     // add a new game object
-    public ResponseEntity<String> addGameObject(GameObjectDto dto) {
-        User seller = userRepository.findById(dto.getSellerId()).orElseThrow(() -> new RuntimeException("This seller doesn't exist"));
+    public ResponseEntity<String> addGameObject(GameObjectDto dto, HttpServletRequest request) {
+
+        HttpSession session = request.getSession(false);
+
+        if(session == null)
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+
+        UUID userId = (UUID)session.getAttribute("sellerId");
+
+        User seller = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("This seller doesn't exist"));
 
         if(seller.getRole() != Role.ROLE_SELLER)
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only verified sellers can create game objects");
@@ -51,12 +61,20 @@ public class GameObjectService {
     }
 
     // edit an object
-    public ResponseEntity<String> editGameObject(UUID objectId, GameObjectDto dto) {
+    public ResponseEntity<String> editGameObject(UUID objectId, GameObjectDto dto, HttpServletRequest request) {
+
+        HttpSession session = request.getSession(false);
+
+        if(session == null)
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+
+        UUID sellerId = (UUID) session.getAttribute("sellerId");
+
         GameObject gameObject = gameObjectRepository.findById(objectId).orElseThrow(() -> new RuntimeException("This object doesn't exist"));
 
         // check ownership, only author can edit
         if(gameObject.getSeller() != null) {
-            if (!gameObject.getSeller().getId().equals(dto.getSellerId())) {
+            if (!gameObject.getSeller().getId().equals(sellerId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only the author can update this game object");
             }
         }
@@ -68,7 +86,15 @@ public class GameObjectService {
         return ResponseEntity.ok(gameObject.getTitle() + " object " + dto.getText() + " successfully updated.");
     }
 
-    public ResponseEntity<String> deleteGameObject(UUID objectId, UUID sellerId) {
+    public ResponseEntity<String> deleteGameObject(UUID objectId, HttpServletRequest request) {
+
+        HttpSession session = request.getSession(false);
+
+        if(session == null)
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+
+        UUID sellerId = (UUID) session.getAttribute("sellerId");
+
         GameObject gameObject = gameObjectRepository.findById(objectId).orElseThrow(() -> new RuntimeException("This object doesn't exist"));
 
         // check if the seller is deleting

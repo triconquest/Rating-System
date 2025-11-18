@@ -7,10 +7,12 @@ import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.CommentRepository;
 import com.example.rating_system.Repository.UserRepository;
 import com.example.rating_system.Services.CommentService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.ResponseEntity;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -29,6 +31,9 @@ public class CommentControllerTest {
     private UserRepository userRepository;
 
     private CommentService commentService;
+
+    @Mock
+    private HttpServletRequest request;
 
     @BeforeEach
     void setUp() {
@@ -51,7 +56,6 @@ public class CommentControllerTest {
         CommentDto dto = new CommentDto();
         dto.setMessage("test message");
         dto.setRating(4);
-        dto.setAuthorId(authorId);
 
         when(userRepository.findById(sellerId)).thenReturn(Optional.of(seller));
         when(userRepository.findById(authorId)).thenReturn(Optional.of(author));
@@ -59,7 +63,7 @@ public class CommentControllerTest {
         Comment savedComment = new Comment();
         when(commentRepository.save(any(Comment.class))).thenReturn(savedComment);
 
-        Comment result = commentService.addComment(sellerId, dto);
+        ResponseEntity<?> result = commentService.addComment(sellerId, dto, request);
 
         assertNotNull(result);
         verify(commentRepository, times(1)).save(any(Comment.class));
@@ -73,7 +77,7 @@ public class CommentControllerTest {
         when(userRepository.findById(sellerId)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            commentService.addComment(sellerId, dto);
+            commentService.addComment(sellerId, dto, request);
         });
 
         assertEquals("Seller not found", exception.getMessage());

@@ -4,12 +4,10 @@ import com.example.rating_system.DTO.PasswordResetDto;
 import com.example.rating_system.Services.PasswordResetService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
-@PreAuthorize("hasRole('SELLER')")
 public class PasswordResetController {
 
     private final PasswordResetService passwordResetService;

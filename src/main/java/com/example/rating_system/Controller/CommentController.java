@@ -2,17 +2,11 @@ package com.example.rating_system.Controller;
 
 import com.example.rating_system.DTO.CommentDto;
 import com.example.rating_system.Model.Comment;
-import com.example.rating_system.Model.CommentStatus;
-import com.example.rating_system.Model.User;
-import com.example.rating_system.Repository.CommentRepository;
-import com.example.rating_system.Repository.UserRepository;
 import com.example.rating_system.Services.CommentService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -29,23 +23,8 @@ public class CommentController {
     }
 
     @PostMapping
-    public Comment addComment(@PathVariable UUID sellerId, @Valid @RequestBody CommentDto dto) {
-        return commentService.addComment(sellerId, dto);
-    }
-
-    // admin gets pending comments
-    @GetMapping("/pending")
-    @PreAuthorize("hasRole('ADMIN')")
-    public List<Comment> getPendingComments() {
-        return commentService.getPendingComments();
-    }
-
-    // admin approves/declines a comment
-    @PutMapping("/{commentId}/status")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> moderateComment(@PathVariable UUID commentId, @RequestParam CommentStatus status)
-    {
-        return commentService.moderateComment(commentId, status);
+    public ResponseEntity<?> addComment(@PathVariable UUID sellerId, @Valid @RequestBody CommentDto dto, HttpServletRequest request) {
+        return commentService.addComment(sellerId, dto, request);
     }
 
     // get a specific comment
@@ -58,22 +37,22 @@ public class CommentController {
     @PutMapping("/{commentId}")
     public ResponseEntity<?> updateComment(@PathVariable UUID commentId,
                                            @Valid @RequestBody CommentDto dto,
-                                           @RequestParam(required = false) UUID authorId,
+                                           HttpServletRequest request,
                                            @RequestParam(required = false) String anonymousToken)
     {
-        return commentService.updateComment(commentId, dto, authorId, anonymousToken);
+        return commentService.updateComment(commentId, dto, request, anonymousToken);
     }
 
     // get every comment linked to this seller
     @GetMapping
-    public List<Comment> getApprovedComments(@PathVariable UUID sellerId) {
+    public List<CommentDto> getApprovedComments(@PathVariable UUID sellerId) {
         return commentService.getApprovedComments(sellerId);
     }
 
     @DeleteMapping("/{commentId}")
     public ResponseEntity<String> deleteComment(@PathVariable UUID commentId,
-                                @RequestParam(required = false) UUID authorId,
+                                HttpServletRequest request,
                                 @RequestParam(required = false) String token) {
-        return commentService.deleteComment(commentId, authorId, token);
+        return commentService.deleteComment(commentId, request, token);
     }
 }
