@@ -6,6 +6,7 @@ import com.example.rating_system.Model.User;
 import com.example.rating_system.Repository.UserRepository;
 import com.example.rating_system.Services.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.apache.coyote.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,10 +36,14 @@ public class AuthControllerTest {
     @Mock
     private HttpServletRequest request;
 
+    @Mock
+    private HttpSession session;
+
     @BeforeEach
     void setup() {
         MockitoAnnotations.openMocks(this);
         authService = new AuthService(userRepository, passwordEncoder);
+        when(request.getSession(true)).thenReturn(session);
     }
 
     @Test

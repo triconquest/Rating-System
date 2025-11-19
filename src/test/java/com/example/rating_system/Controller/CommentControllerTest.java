@@ -8,6 +8,7 @@ import com.example.rating_system.Repository.CommentRepository;
 import com.example.rating_system.Repository.UserRepository;
 import com.example.rating_system.Services.CommentService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -35,11 +36,15 @@ public class CommentControllerTest {
     @Mock
     private HttpServletRequest request;
 
+    @Mock
+    private HttpSession session;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         // constructor injection
         commentService = new CommentService(commentRepository, userRepository);
+        when(request.getSession(false)).thenReturn(session);
     }
 
     @Test
@@ -52,6 +57,7 @@ public class CommentControllerTest {
         seller.setApproved(true);
 
         User author = new User();
+        author.setId(authorId);
 
         CommentDto dto = new CommentDto();
         dto.setMessage("test message");
@@ -61,6 +67,8 @@ public class CommentControllerTest {
         when(userRepository.findById(authorId)).thenReturn(Optional.of(author));
 
         Comment savedComment = new Comment();
+        savedComment.setId(UUID.randomUUID());
+        savedComment.setAnonymousToken(null);
         when(commentRepository.save(any(Comment.class))).thenReturn(savedComment);
 
         ResponseEntity<?> result = commentService.addComment(sellerId, dto, request);
