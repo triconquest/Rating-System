@@ -53,7 +53,7 @@ public class CommentControllerTest {
         UUID authorId = UUID.randomUUID();
 
         User seller = new User();
-        seller.setRole(Role.ROLE_SELLER);
+        seller.setRole(Role.SELLER);
         seller.setApproved(true);
 
         User author = new User();

@@ -48,7 +48,7 @@ public class CommentIntegrationTest {
         seller.setLastName("Doe");
         seller.setEmail("seller@example.com");
         seller.setPasswordHash("password");
-        seller.setRole(Role.ROLE_SELLER);
+        seller.setRole(Role.SELLER);
         seller.setApproved(true);
         userRepository.save(seller);
     }
@@ -66,8 +66,8 @@ public class CommentIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(commentJson))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("test comment"))
-                .andExpect(jsonPath("$.seller.id").value(seller.getId().toString()));
+                .andExpect(jsonPath("$.commentId").exists())
+                .andExpect(jsonPath("$.anonymousToken").exists());
 
         List<Comment> comments = commentRepository.findAllBySellerIdAndStatus(seller.getId(), CommentStatus.PENDING);
         assertEquals(1, comments.size());

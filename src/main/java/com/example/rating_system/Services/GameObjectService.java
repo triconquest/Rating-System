@@ -43,7 +43,7 @@ public class GameObjectService {
 
         User seller = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("This seller doesn't exist"));
 
-        if(seller.getRole() != Role.ROLE_SELLER)
+        if(seller.getRole() != Role.SELLER)
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only verified sellers can create game objects");
 
         GameObject gameObject = new GameObject();

@@ -40,7 +40,7 @@ public class AuthService {
                     .body("Incorrect email or password");
         }
 
-        if(user.getRole() == Role.ROLE_PENDING_SELLER && !user.isApproved())
+        if(user.getRole() == Role.PENDING_SELLER && !user.isApproved())
         {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("This seller profile is pending admin approval");

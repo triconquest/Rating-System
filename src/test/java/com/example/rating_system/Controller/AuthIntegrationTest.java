@@ -43,7 +43,7 @@ public class AuthIntegrationTest {
         user.setPasswordHash(passwordEncoder.encode("password123"));
         user.setEmailConfirmed(true);
         user.setApproved(true);
-        user.setRole(Role.ROLE_SELLER);
+        user.setRole(Role.SELLER);
 
         userRepository.save(user);
     }

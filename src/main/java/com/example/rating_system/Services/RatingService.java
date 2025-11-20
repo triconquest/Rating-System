@@ -32,7 +32,7 @@ public class RatingService {
         List<Comment> approved = commentRepository.findAllBySellerIdAndStatus(sellerId, CommentStatus.APPROVED);
 
         if(approved.isEmpty())
-            return null;
+            return 0.0;
 
         return approved.stream().mapToInt(Comment::getRating).average().orElse(0.0);
     }
@@ -42,7 +42,7 @@ public class RatingService {
     }
 
     public List<SellerRatingDto> getTopSellers() {
-        List<User> sellers = userRepository.findByApprovedTrueAndRole(Role.ROLE_SELLER);
+        List<User> sellers = userRepository.findByApprovedTrueAndRole(Role.SELLER);
 
         return sellers.stream()
                 .map(s -> {

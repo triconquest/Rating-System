@@ -7,7 +7,6 @@ import com.example.rating_system.Repository.UserRepository;
 import com.example.rating_system.Services.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import org.apache.coyote.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -17,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -59,7 +57,7 @@ public class AuthControllerTest {
         user.setPasswordHash("encodedPass");
         user.setEmailConfirmed(true);
         user.setApproved(true);
-        user.setRole(Role.ROLE_SELLER);
+        user.setRole(Role.SELLER);
 
         when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())).thenReturn(true);
@@ -84,7 +82,7 @@ public class AuthControllerTest {
         user.setEmail(dto.getEmail());
         user.setPasswordHash("hashedWrongPass");
         user.setEmailConfirmed(true);
-        user.setRole(Role.ROLE_SELLER);
+        user.setRole(Role.SELLER);
 
         when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);

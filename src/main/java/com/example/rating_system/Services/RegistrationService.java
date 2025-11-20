@@ -42,7 +42,7 @@ public class RegistrationService {
         user.setPasswordHash(hashedPassword);
 
         user.setEmailConfirmed(false);
-        user.setRole(Role.ROLE_PENDING_SELLER);
+        user.setRole(Role.PENDING_SELLER);
         userRepository.save(user);
 
         String code = UUID.randomUUID().toString();

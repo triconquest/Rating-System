@@ -36,7 +36,7 @@ public class CommentService {
     public ResponseEntity<?> addComment(UUID sellerId, CommentDto dto, HttpServletRequest request) {
         User seller = userRepository.findById(sellerId).orElseThrow(() -> new RuntimeException("Seller not found"));
 
-        if(!seller.isApproved() || seller.getRole() != Role.ROLE_SELLER) {
+        if(!seller.isApproved() || seller.getRole() != Role.SELLER) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot comment on a pending seller");
         }
 

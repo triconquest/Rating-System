@@ -21,11 +21,11 @@ public class AdminService {
     }
 
     public List<User> getAllSellers() {
-        return userRepository.findByApprovedTrueAndRole(Role.ROLE_SELLER);
+        return userRepository.findByApprovedTrueAndRole(Role.SELLER);
     }
 
     public List<User> getPendingSellers() {
-        return userRepository.findByApprovedFalseAndRole(Role.ROLE_PENDING_SELLER);
+        return userRepository.findByApprovedFalseAndRole(Role.PENDING_SELLER);
     }
 
     public String approveSeller(UUID id) {
@@ -37,7 +37,7 @@ public class AdminService {
             return "Seller needs to confirm their email";
 
         seller.get().setApproved(true);
-        seller.get().setRole(Role.ROLE_SELLER);
+        seller.get().setRole(Role.SELLER);
         userRepository.save(seller.get());
         return "Seller approved";
     }
