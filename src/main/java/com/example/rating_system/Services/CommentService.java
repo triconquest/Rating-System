@@ -107,10 +107,12 @@ public class CommentService {
 
         HttpSession session = request.getSession(false);
 
-        UUID authorId = (UUID) session.getAttribute("sellerId");
-
         // registered user must have a session
         if(comment.getAuthor() != null) {
+
+            if(session == null)
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You must be logged in to update this comment");
+
             UUID userId = (UUID) session.getAttribute("userId");
             if(!comment.getAuthor().getId().equals(userId)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only update your own comments");
@@ -130,7 +132,7 @@ public class CommentService {
         comment.setStatus(CommentStatus.PENDING); // updated comment needs to be re-approved
 
         commentRepository.save(comment);
-        return ResponseEntity.ok(comment);
+        return ResponseEntity.ok("Comment updated successfully");
     }
 
     // get every comment linked to this user

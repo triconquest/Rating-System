@@ -9,8 +9,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class RatingService {
@@ -48,12 +50,14 @@ public class RatingService {
                 .map(s -> {
                     double avg = getSellerRating(s.getId());
                     int count = getSellerRatingCount(s.getId());
-                    String name = (s.getFirstName() == null ? "" : s.getFirstName())
-                            + (s.getLastName() == null ? "" : " " + s.getLastName()).trim();
+                    String name = Stream.of(s.getFirstName(), s.getLastName())
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.joining(" "));
                     return new SellerRatingDto(s.getId(), name, avg, count);
-                        })
+                })
+                .filter(dto -> dto.getTotalRatings() > 0)
                 .sorted(Comparator.comparingDouble(SellerRatingDto::getAverageRating).reversed()
-                        .thenComparingInt(SellerRatingDto::getTotalRatings).reversed())
+                        .thenComparingInt(SellerRatingDto::getTotalRatings))
                 .collect(Collectors.toList());
     }
 
@@ -69,8 +73,9 @@ public class RatingService {
                 .map(s -> {
                     double avg = getSellerRating(s.getId());
                     int count = getSellerRatingCount(s.getId());
-                    String name = (s.getFirstName() == null ? "" : s.getFirstName())
-                            + (s.getLastName() == null ? "" : " " + s.getLastName()).trim();
+                    String name = Stream.of(s.getFirstName(), s.getLastName())
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.joining(" "));
                     return new SellerRatingDto(s.getId(), name, avg, count);
                 })
                 .filter(dto -> dto.getAverageRating() >= minRating && dto.getAverageRating() < maxRating)

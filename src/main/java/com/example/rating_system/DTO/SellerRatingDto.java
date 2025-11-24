@@ -10,8 +10,6 @@ public class SellerRatingDto {
     private double averageRating;
     private int totalRatings;
 
-    private int rank;
-
     private String game;
 
     public SellerRatingDto(UUID sellerId, String sellerName, double averageRating, int totalRatings)
@@ -26,5 +24,4 @@ public class SellerRatingDto {
     public String getSellerName() { return sellerName; }
     public double getAverageRating() { return averageRating; }
     public int getTotalRatings() { return totalRatings; }
-    public int getRank() { return rank; }
 }

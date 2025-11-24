@@ -1,7 +1,6 @@
 package com.example.rating_system.Repository;
 
 import com.example.rating_system.Model.GameObject;
-import org.springframework.data.domain.Example;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
